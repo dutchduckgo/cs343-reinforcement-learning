@@ -11,6 +11,12 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+# ---------------------------------------------------------------------------
+# AI assistance disclosure - Richard Shi
+# I used Claude Opus 5 to brainstorm and walk through the logic of Value iteration and Q-Learning and to
+# check for correctness of my code.
+# All code was written by me.
+# ---------------------------------------------------------------------------
 
 from game import *
 from learningAgents import ReinforcementAgent
