@@ -72,10 +72,9 @@ class ValueIterationAgent(ValueEstimationAgent):
                 actions = self.mdp.getPossibleActions(state)
                 if not actions:
                     continue
-                maxQValue = float('-inf')
-                for action in actions:
-                    maxQValue = max(maxQValue, self.computeQValueFromValues(state, action))
-                    newValues[state] = maxQValue
+
+                maxQValue = self.maxQValueFromValues(state)
+                newValues[state] = maxQValue
             
             self.values = newValues
 
@@ -125,6 +124,14 @@ class ValueIterationAgent(ValueEstimationAgent):
                 bestAction = action
 
         return bestAction
+    
+    # helper function to find max of computeQValues(state, a) 
+    def maxQValueFromValues(self, state):
+        maxQValue = float('-inf')
+        for action in self.mdp.getPossibleActions(state):
+            maxQValue = max(maxQValue, self.computeQValueFromValues(state, action))
+
+        return maxQValue
     
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
@@ -205,3 +212,35 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+        predecessors = collections.defaultdict(set) # state -> set() of its preds
+
+        for state in self.mdp.getStates():
+            if self.mdp.isTerminal(state):
+                continue
+            for action in self.mdp.getPossibleActions(state):
+                for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+                    if prob > 0:
+                        predecessors[nextState].add(state)
+        
+        pq = util.PriorityQueue()
+        for state in self.mdp.getStates():
+            if self.mdp.isTerminal(state):
+                continue
+
+            maxQValue = self.maxQValueFromValues(state)
+
+            diff = abs(self.values[state] - maxQValue)
+            pq.push(state, -diff)
+
+        for i in range(self.iterations):
+            if pq.isEmpty():
+                break
+            s = pq.pop()
+
+            if not self.mdp.isTerminal(s):
+                self.values[s] = self.maxQValueFromValues(s)
+
+                for p in predecessors[s]:
+                    diff = abs(self.values[p] - self.maxQValueFromValues(p))
+                    if diff > self.theta:
+                        pq.update(p, -diff)
